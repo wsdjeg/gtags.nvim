@@ -4,6 +4,9 @@ local gtags_cache_dir = vim.fn.stdpath('data') .. '/gtags.nvim/'
 
 local gtags_label = ''
 
+local gtags_global_command = 'global'
+local gtags_command = 'gtags'
+
 ---@param p string
 local function path_to_fname(p)
     return p:gsub('/', '_'):gsub('\\', '_'):gsub(':', '_')
@@ -46,6 +49,22 @@ end
 
 function M.run(fargs) end
 
-function M.setup(opts) end
+function M.setup(opts)
+    opts = opts or {}
+
+    if opts.gtags_command then
+        gtags_command = opts.gtags_command
+    end
+
+    if vim.fn.executable(gtags_command) == 0 then
+        require('notify').notify(
+            string.format('gtags.nvim: %s is not executable', gtags_command),
+            'WarningMsg'
+        )
+        return
+    end
+
+    -- local version = vim.split(matchstr(split(system('gtags --version'), '\n')[0], '[0-9]\+\.[0-9]\+'), '\.')
+end
 
 return M
