@@ -46,8 +46,34 @@ function M.update(single_update)
         end,
     })
 end
-
-function M.run(fargs) end
+local global_jobid = -1
+local global_result = {}
+function M.global(fargs)
+    table.insert(fargs, 1, gtags_global_command)
+    global_result = {}
+    global_jobid = require('job').start(fargs, {
+        env = {
+            GTAGSROOT = vim.fn.getcwd(),
+            GTAGSDBPATH = gtags_cache_dir .. path_to_fname(vim.fn.getcwd()),
+        },
+        on_stdout = function(id, data)
+            if id ~= global_jobid then
+                return
+            end
+            for _, v in ipairs(data) do
+                table.insert(global_result, v)
+            end
+        end,
+        on_exit = function(id, data, single)
+            if id ~= global_jobid then
+                return
+            end
+            if data == 0 and single == 0 then
+                vim.fn.setqflist({}, 'r', { lines = global_result })
+            end
+        end,
+    })
+end
 
 function M.setup(opts)
     opts = opts or {}
@@ -65,12 +91,12 @@ function M.setup(opts)
     end
 
     if opts.auto_update then
-        vim.api.nvim_create_autocmd({'BufWritePost'}, {
-            group = vim.api.nvim_create_augroup('gtags.nvim', {clear = true}),
-            pattern = {'*'},
+        vim.api.nvim_create_autocmd({ 'BufWritePost' }, {
+            group = vim.api.nvim_create_augroup('gtags.nvim', { clear = true }),
+            pattern = { '*' },
             callback = function(_)
                 M.update(true)
-            end
+            end,
         })
     end
 
