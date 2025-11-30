@@ -55,6 +55,7 @@ end
 local global_jobid = -1
 local global_result = {}
 function M.global(fargs)
+    table.insert(fargs, 1, '--result=ctags')
     table.insert(fargs, 1, gtags_global_command)
     global_result = {}
     global_jobid = require('job').start(fargs, {
@@ -82,7 +83,7 @@ function M.global(fargs)
             end
             logger.info('global exit with code:' .. data .. ' single:' .. single)
             if data == 0 and single == 0 then
-                vim.fn.setqflist({}, 'r', { lines = global_result })
+                vim.fn.setqflist({}, 'r', { lines = global_result, efm = [[%m\t%f\t%l]] })
             end
         end,
     })
