@@ -64,6 +64,16 @@ function M.setup(opts)
         return
     end
 
+    if opts.auto_update then
+        vim.api.nvim_create_autocmd({'BufWritePost'}, {
+            group = vim.api.nvim_create_augroup('gtags.nvim', {clear = true}),
+            pattern = {'*'},
+            callback = function(_)
+                M.update(true)
+            end
+        })
+    end
+
     -- local version = vim.split(matchstr(split(system('gtags --version'), '\n')[0], '[0-9]\+\.[0-9]\+'), '\.')
 end
 
