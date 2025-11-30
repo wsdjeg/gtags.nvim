@@ -58,6 +58,11 @@ local global_result = {}
 function M.global(fargs)
     table.insert(fargs, 1, '--result=ctags')
     table.insert(fargs, 1, gtags_global_command)
+
+    -- if the last argument is %, replace it with current file
+    if fargs[#fargs] == '%' then
+        fargs[#fargs] = vim.fn.bufname()
+    end
     global_result = {}
     logger.debug(vim.inspect(fargs))
     global_jobid = require('job').start(fargs, {
