@@ -7,6 +7,10 @@ local gtags_label = ''
 local gtags_global_command = 'global'
 local gtags_command = 'gtags'
 
+local notify = require('notify')
+local job = require('job')
+local logger = require('logger').derive('gtags')
+
 ---@param p string
 local function path_to_fname(p)
     return p:gsub('/', '_'):gsub('\\', '_'):gsub(':', '_')
@@ -35,13 +39,15 @@ function M.update(single_update)
     table.insert(cmd, '-O')
     table.insert(cmd, dir)
 
-    require('job').start(cmd, {
+    job.start(cmd, {
         on_exit = function(id, data, single)
             if data > 0 or single > 0 then
                 require('notify').notify(
                     'failed to update gtags, exit code:' .. data .. ' single:' .. single,
                     'WarningMsg'
                 )
+            else
+                logger.info('gtags update done')
             end
         end,
     })
@@ -61,18 +67,26 @@ function M.global(fargs)
                 return
             end
             for _, v in ipairs(data) do
+                logger.info(v)
                 table.insert(global_result, v)
+            end
+        end,
+        on_stderr = function(id, data)
+            for _, v in ipairs(data) do
+                logger.info(v)
             end
         end,
         on_exit = function(id, data, single)
             if id ~= global_jobid then
                 return
             end
+            logger.info('global exit with code:' .. data .. ' single:' .. single)
             if data == 0 and single == 0 then
                 vim.fn.setqflist({}, 'r', { lines = global_result })
             end
         end,
     })
+    logger.info('gtags jobid:' .. global_jobid)
 end
 
 function M.setup(opts)
