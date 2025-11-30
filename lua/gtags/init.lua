@@ -38,7 +38,7 @@ function M.update(single_update)
 
     table.insert(cmd, '-O')
     table.insert(cmd, dir)
-
+    logger.debug(vim.inspect(cmd))
     job.start(cmd, {
         on_exit = function(id, data, single)
             if data > 0 or single > 0 then
@@ -58,6 +58,7 @@ function M.global(fargs)
     table.insert(fargs, 1, '--result=ctags')
     table.insert(fargs, 1, gtags_global_command)
     global_result = {}
+    logger.debug(vim.inspect(fargs))
     global_jobid = require('job').start(fargs, {
         env = {
             GTAGSROOT = vim.fn.getcwd(),
