@@ -2,10 +2,11 @@ local M = {}
 
 local gtags_cache_dir = vim.fn.stdpath('data') .. '/gtags.nvim/'
 
-local gtags_label = ''
+local gtags_label = 'ctags'
 
 local gtags_global_command = 'global'
 local gtags_command = 'gtags'
+local global_efm = '%m\t%f\t%l'
 
 local notify = require('notify')
 local job = require('job')
@@ -84,7 +85,12 @@ function M.global(fargs)
             end
             logger.info('global exit with code:' .. data .. ' single:' .. single)
             if data == 0 and single == 0 then
-                vim.fn.setqflist({}, 'r', { lines = global_result, efm = [[%m\t%f\t%l]] })
+                if #global_result > 0 then
+                    vim.fn.setqflist({}, 'r', { lines = global_result, efm = global_efm })
+                    vim.cmd.copen()
+                else
+                    notify.notify('no result from gtags')
+                end
             end
         end,
     })
@@ -98,8 +104,10 @@ function M.setup(opts)
         gtags_command = opts.gtags_command
     end
 
+    global_efm = opts.global_efm or global_efm
+
     if vim.fn.executable(gtags_command) == 0 then
-        require('notify').notify(
+        notify.notify(
             string.format('gtags.nvim: %s is not executable', gtags_command),
             'WarningMsg'
         )
